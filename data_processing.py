@@ -1,3 +1,43 @@
+class TableDB:
+    def __init__(self):
+        self.tableData = []
+
+    def insert(self, table):
+        idx = self.search(table)
+        if idx == -1:
+            self.tableData.append(table)
+        else:
+            print(f"{table}: Duplicated account")
+
+    def search(self, tableName):
+        for acc in self.tableData:
+            if acc == tableName:
+                return acc
+        return -1
+
+class Table:
+    def __init__(self, tableName, table):
+        self.tableName = tableName
+        self.table = table
+
+    def filter(self, condition):
+        filterList = []
+        for it in self.table:
+            if condition(it):
+                filterList.append(it)
+        return filterList
+
+    def aggregate(self, aggregaKey, aggregaFunc):
+        _list = []
+        for item in self.table:
+            value = float(item[aggregaKey])
+            _list.append(value)
+
+        return aggregaFunc(_list)
+
+    def __str__(self):
+        return f"Table: {self.tableName}, with {len(self.table)}"
+
 import csv, os
 
 __location__ = os.path.realpath(
@@ -14,57 +54,42 @@ with open(os.path.join(__location__, 'Countries.csv')) as f:
     rows = csv.DictReader(f)
     for r in rows:
         countries.append(dict(r))
-
-# Print the average temperature of all the cities
-print("The average temperature of all the cities:")
-temps = []
-for city in cities:
-    temps.append(float(city['temperature']))
-print(sum(temps)/len(temps))
-print()
-
-# Print all cities in Italy
-cities_temp = []
-my_country = 'Italy'
-for city in cities:
-    if city['country'] == my_country:
-        cities_temp.append(city['city'])
-print("All the cities in", my_country, ":")
-print(cities_temp)
-print()
-
-# Print the average temperature for all the cities in Italy
-temps = []
-my_country = 'Italy'
-for city in cities:
-    if city['country'] == my_country:
-        temps.append(float(city['temperature']))
-print("The average temperature of all the cities in", my_country, ":")
-print(sum(temps)/len(temps))
-print()
-
-# Print the max temperature for all the cities in Italy
-temps = []
-my_country = 'Italy'
-for city in cities:
-    if city['country'] == my_country:
-        temps.append(float(city['temperature']))
-print("The max temperature of all the cities in", my_country, ":")
-print(max(temps))
-print()
-
-# Print the min temperature for all the cities in Italy
-temps = []
-my_country = 'Italy'
-for city in cities:
-    if city['country'] == my_country:
-        temps.append(float(city['temperature']))
-print("The min temperature of all the cities in", my_country, ":")
-print(min(temps))
-print()
-
 # Let's write code to
+
+citiesTable = Table("cities", cities)
+countriesTable = Table("countries", countries)
+
+db = TableDB()
+db.insert(citiesTable)
+db.insert(countriesTable)
+
+citiesInItaly = citiesTable.filter(lambda x: x['country'] == 'Italy')
+citiesInSweden = citiesTable.filter(lambda x: x["country"] == "Sweden")
+
+citiesItaly = Table("italy_cities", citiesInItaly)
+citiesSweden = Table("sweden_cities", citiesInSweden)
+
+db.insert(citiesInItaly)
+db.insert(citiesInSweden)
+
+
 # - print the average temperature for all the cities in Italy
+avgItaly = citiesItaly.aggregate("temperature", lambda x: sum(x)/len(x))
+print(f"The average temperature of all the cities in Italy :\n{avgItaly}\n")
 # - print the average temperature for all the cities in Sweden
+avgSweden = citiesSweden.aggregate("temperature", lambda x: sum(x)/len(x))
+print(f"The average temperature of all the cities in Sweden :\n{avgSweden}\n")
 # - print the min temperature for all the cities in Italy
+minItaly = citiesItaly.aggregate("temperature", lambda x: min(x))
+print(f"The min temperature of all the cities in Italy :\n{minItaly}\n")
 # - print the max temperature for all the cities in Sweden
+maxSweden = citiesSweden.aggregate("temperature", lambda x: max(x))
+print(f"The max temperature of all the cities in Sweden :\n{maxSweden}\n")
+
+maxLatitude = citiesTable.aggregate("latitude", lambda x: max(x))
+minLatitude = citiesTable.aggregate("latitude", lambda x: min(x))
+
+print("Max latitude for the cities in every countries")
+print(f"{maxLatitude}\n")
+print("Min latitude for the cities in every countries")
+print(f"{minLatitude}\n")
